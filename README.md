@@ -15,6 +15,9 @@ This is a Spring Boot backend for a blog website. It includes a fully functional
 - ✅ Role-based access control (admin/user)
 - ✅ Secure endpoints with Spring Security
 - ✅ Caching using Redis
+- ✅ Testing using Mockito
+- ✅ RazorPay payment gateway impl
+- ✅ Ollama chatbot integration 
 
 ## 📌 Tech Stack
 
