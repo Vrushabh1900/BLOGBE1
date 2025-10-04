@@ -2,6 +2,7 @@ package newblogproject.example.newproject.config;
 
 import javax.sql.DataSource;
 //import jakarta.activation.DataSource;
+import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -18,6 +19,8 @@ public class AppConfig {
     public PlatformTransactionManager transactionManager(DataSource dataSource) {
         return new DataSourceTransactionManager(dataSource);
     }
+
+
 //
 //    @Bean
 //    public TransactionTemplate transactionTemplate

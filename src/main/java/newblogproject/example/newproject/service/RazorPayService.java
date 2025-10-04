@@ -30,15 +30,12 @@ public class RazorPayService {
     @Autowired
     private static final String WEBHOOK_SECRET = "myfirstwebhookusingrazorpaycro";
 
-    @Value("${RZP_SECRET_KEY}")
-String testkey;
-        @Value("${RZP_TEST_KEY}")
-    String keysecret;
+
     @Transactional
         public PaymentOrder createRazorpayOrder(int amount, String currency, String receiptId, String email) throws RazorpayException {
 
             Users user1=userRepo.findByEmail(email).orElseThrow(()->new UsernameNotFoundException("email not found"+email));
-            RazorpayClient razorpayClient = new RazorpayClient(testkey, keysecret);
+            RazorpayClient razorpayClient = new RazorpayClient("rzp_test_RNQTnVqVCRWN76", "htMrQoz7xr9mGDmWzycRWTBR");
             JSONObject orderRequest = new JSONObject();
             orderRequest.put("amount", amount*100);
             orderRequest.put("currency", currency);

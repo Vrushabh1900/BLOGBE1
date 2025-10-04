@@ -147,18 +147,18 @@ public ResponseEntity<?> loginpage(@RequestBody AuthRequest authRequest)
         }
     }
 
-    @PostMapping("/2fa/send")
-    public ResponseEntity<?> send2FAOtp(@RequestBody Map<String, String> request,@CurrentSecurityContext(expression = "authentication?.name")String email) {
-        String emailOrPhone = request.get("contact"); // take from authenticated user
-        String method = request.get("method"); // "EMAIL" or "PHONE"
-
-        try {
-            service.sendOtp(method, emailOrPhone,email);
-            return ResponseEntity.ok("OTP sent via " + method);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
-        }
-    }
+//    @PostMapping("/2fa/send")
+//    public ResponseEntity<?> send2FAOtp(@RequestBody Map<String, String> request,@CurrentSecurityContext(expression = "authentication?.name")String email) {
+//        String emailOrPhone = request.get("contact"); // take from authenticated user
+//        String method = request.get("method"); // "EMAIL" or "PHONE"
+//
+//        try {
+//            service.sendOtp(method, emailOrPhone,email);
+//            return ResponseEntity.ok("OTP sent via " + method);
+//        } catch (RuntimeException e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+//        }
+//    }
     @PostMapping("/2fa/verify")
     public ResponseEntity<?> verifyOtp(@RequestBody Map<String, String> request,@CurrentSecurityContext(expression = "authentication?.name")String email) {
         String contact = request.get("contact");

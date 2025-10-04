@@ -98,21 +98,21 @@ public class UserService {
 
     }
 
-    public void sendOtp(String method, String contact,String email) {
-        String otp = String.valueOf(ThreadLocalRandom.current().nextInt(100000, 1000000));// generate 6-digit OTP
-
-        Users user = repo.findByEmail(email).orElseThrow(()->new UsernameNotFoundException("user not found"+email));
-        user.setVerifyOtp(passwordEncoder.encode(otp));//encrypt it
-        user.setVerifyOtpExpireAt(System.currentTimeMillis() + 5 * 60 * 1000); // 5 min
-        repo.save(user);
-
-        // Send OTP
-        if ("EMAIL".equalsIgnoreCase(method)) {
-            es.sendEmailVerificationOtp(email, otp);
-        } else {
-            es.sendPhoneVerificationOtp(contact, otp); // even Twilio can be called from this
-        }
-    }
+//    public void sendOtp(String method, String contact,String email) {
+//        String otp = String.valueOf(ThreadLocalRandom.current().nextInt(100000, 1000000));// generate 6-digit OTP
+//
+//        Users user = repo.findByEmail(email).orElseThrow(()->new UsernameNotFoundException("user not found"+email));
+//        user.setVerifyOtp(passwordEncoder.encode(otp));//encrypt it
+//        user.setVerifyOtpExpireAt(System.currentTimeMillis() + 5 * 60 * 1000); // 5 min
+//        repo.save(user);
+//
+//        // Send OTP
+//        if ("EMAIL".equalsIgnoreCase(method)) {
+//            es.sendEmailVerificationOtp(email, otp);
+//        } else {
+//            es.sendPhoneVerificationOtp(contact, otp); // even Twilio can be called from this
+//        }
+//    }
 
 
     public boolean verifyOtp(String method, String contact, String otp,String email) {

@@ -15,23 +15,23 @@ public class EmailService {
     @Value("${spring.mail.properties.mail.smtp.from}")
     private String fromEmail;
 
-    @Value("${twilio.account.sid}")
-    private String twilioSid;
-
-    @Value("${twilio.auth.token}")
-    private String twilioAuthToken;
-
-    @Value("${twilio.phone.number}")
-    private String twilioPhoneNumber;
-
-    private boolean isTwilioInitialized = false;
-
-    private void initTwilio() {
-        if (!isTwilioInitialized) {
-            Twilio.init(twilioSid, twilioAuthToken);
-            isTwilioInitialized = true;
-        }
-    }
+//    @Value("${twilio.account.sid}")
+//    private String twilioSid;
+//
+//    @Value("${twilio.auth.token}")
+//    private String twilioAuthToken;
+//
+//    @Value("${twilio.phone.number}")
+//    private String twilioPhoneNumber;
+//
+//    private boolean isTwilioInitialized = false;
+//
+//    private void initTwilio() {
+//        if (!isTwilioInitialized) {
+//            Twilio.init(twilioSid, twilioAuthToken);
+//            isTwilioInitialized = true;
+//        }
+//    }
 
     public void sendWelcomeEmail(String toEmail, String name) {
         SimpleMailMessage message = new SimpleMailMessage();
@@ -51,27 +51,27 @@ public class EmailService {
         javaMailSender.send(smp);
     }
 
-    public void sendPhoneVerificationOtp(String phoneNumber, String otp) {
-        initTwilio();
-        if (!phoneNumber.startsWith("+")) {
-            phoneNumber = "+91" +phoneNumber; // for India
-        }
-
-        try {
-            Message message = Message.creator(
-                    new PhoneNumber(phoneNumber),
-                    new PhoneNumber(twilioPhoneNumber),
-                    "Your verification OTP is: " + otp
-            ).create();
-
-            if (message.getErrorCode() != null) {
-                throw new RuntimeException("Twilio error: " + message.getErrorMessage());
-            }
-
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to send OTP to phone: " + e.getMessage());
-        }
-    }
+//    public void sendPhoneVerificationOtp(String phoneNumber, String otp) {
+//        initTwilio();
+//        if (!phoneNumber.startsWith("+")) {
+//            phoneNumber = "+91" +phoneNumber; // for India
+//        }
+//
+//        try {
+//            Message message = Message.creator(
+//                    new PhoneNumber(phoneNumber),
+//                    new PhoneNumber(twilioPhoneNumber),
+//                    "Your verification OTP is: " + otp
+//            ).create();
+//
+//            if (message.getErrorCode() != null) {
+//                throw new RuntimeException("Twilio error: " + message.getErrorMessage());
+//            }
+//
+//        } catch (Exception e) {
+//            throw new RuntimeException("Failed to send OTP to phone: " + e.getMessage());
+//        }
+//    }
 
     public void sendEmailVerificationOtp(String email, String otp) {
         SimpleMailMessage smp=new SimpleMailMessage();
