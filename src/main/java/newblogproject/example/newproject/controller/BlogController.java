@@ -1,23 +1,32 @@
 package newblogproject.example.newproject.controller;
 
+import com.twilio.twiml.voice.Application;
+import jakarta.persistence.OptimisticLockException;
 import jakarta.servlet.http.HttpServletRequest;
 import newblogproject.example.newproject.DTO.SliceResponse;
+import newblogproject.example.newproject.Events.BlogCreatedEvent;
 import newblogproject.example.newproject.models.Blog;
+import newblogproject.example.newproject.models.Comment;
 import newblogproject.example.newproject.repo.BlogRepo;
 import newblogproject.example.newproject.service.BlogService;
 
+import newblogproject.example.newproject.service.CommentService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.*;
 import org.springframework.http.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -28,26 +37,25 @@ public class BlogController {
     BlogRepo repo;
 @Autowired
     BlogService bs;
-
+@Autowired
+    CommentService cs;
 
     @GetMapping("/")
-public String first(HttpServletRequest req)
+     public String first(HttpServletRequest req)
 {
     return "hello"+ req.getSession().getId();
 }
 
-//@GetMapping("/csrfshi")
-//public CsrfToken gettoken(HttpServletRequest request)
-//{
-//return (CsrfToken) request.getAttribute("_csrf");
-//}
 
     @PostMapping("/posts")
-    public ResponseEntity<?> createblogs(@RequestPart Blog blogo, @RequestPart MultipartFile imagefile)
+    public ResponseEntity<?> createblogs(@RequestPart Blog blogo, @RequestPart MultipartFile imagefile, @CurrentSecurityContext(expression = "authentication?.name")String email)
     {
         try
-        { Blog blogo1= bs.createpost(blogo,imagefile);
-return new ResponseEntity<>(blogo1, HttpStatus.OK);}
+        {
+                bs.createpost(blogo,imagefile,email);
+
+return new ResponseEntity<>("BLOG CREATED", HttpStatus.OK);
+        }
         catch(Exception e)
         {
 return new ResponseEntity<>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
@@ -80,7 +88,7 @@ return new ResponseEntity<>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        System.out.println("🔥🔥🔥 HIT /posts/slice 🔥🔥🔥");
+        System.out.println(" HIT /posts/slice ");
         Pageable pageable = PageRequest.of(page, size);
 //        Slice<Blog> slice = repo.findByKeyword(keyword.orElse(""), pageable);
         Slice<Blog> slice;
@@ -99,10 +107,7 @@ return new ResponseEntity<>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @GetMapping("/posts/getposts")
-    @Transactional
     public List<Blog> getposts(){
-      System.out.println(bs.getposts());
-        System.out.println(bs.getposts());
         return bs.getposts();
     }
 
@@ -128,18 +133,50 @@ return new ResponseEntity<>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
 
     }
 
+    @GetMapping("/user/getblogs")
+    public ResponseEntity<?> getblogsbyuser(@CurrentSecurityContext(expression = "authentication?.name")String email)
+    {
+ try{
+     if(bs.getpostbyuser(email).isEmpty())
+     {
+         return new ResponseEntity<>("No posts have been created !",HttpStatus.OK);
+     }
+     else
+         return new ResponseEntity<>(bs.getpostbyuser(email),HttpStatus.OK);
+
+ } catch (Exception e) {
+     throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Email not found");
+ }
+
+
+    }
     @PostMapping("/posts/{editingId}")
-    public ResponseEntity<String> updateproduct(@PathVariable int editingId,@RequestPart Blog blogo, @RequestPart MultipartFile imagefile)
+    public ResponseEntity<?> updateblog(@PathVariable int editingId,@RequestPart Blog blogo, @RequestPart MultipartFile imagefile)
     { Blog blog1=null;
         blog1=repo.findById(editingId).orElse(null);
           try
             { blog1=bs.updatepostbyid(editingId,blogo,imagefile);
         return new ResponseEntity<>("Updated", HttpStatus.OK);}
-catch(Exception e)
-            {return new ResponseEntity<>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+catch(OptimisticLockException e)
+            {
+                Blog LatestBlog= repo.findById(editingId).orElseThrow(()-> new UsernameNotFoundException("Blog not found"));
+                String errorMessage = "This blog post was updated by someone else while you were editing. " +
+                        "Please review the latest version and re-apply your changes if needed.";
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(Map.of(
+                                "message", errorMessage,
+                                "latestBlog", LatestBlog,
+                                "yourAttemptedChanges", blogo
+                        ));
 
     }
+          catch (IOException e) {
+              throw new RuntimeException(e);
+          }
+
+    }
+
+
         @DeleteMapping("/posts/{id}")
         public ResponseEntity<?> deleteposts(@PathVariable int id)
         {
@@ -150,25 +187,16 @@ Blog blogo=repo.findById(id).orElse(null);
             else
             {return new ResponseEntity<>("Not deleted you nigger",HttpStatus.BAD_REQUEST);
         }
-
-
-
 }
-//@GetMapping("/blogs/search")
-//    public ResponseEntity<?> search(@RequestParam String keyword)
-//{
-//    List<Blog> blogo=bs.searchproduct(keyword);
-//    return new ResponseEntity<>(blogo,HttpStatus.OK);
-//}
-@GetMapping("/posts/search")
 
-public List<Blog> searchPosts(@RequestParam("keyword") String keyword) {
+   @GetMapping("/posts/search")
+  public List<Blog> searchPosts(@RequestParam("keyword") String keyword) {
     return bs.searchByKeyword(keyword);
 }
 
 
 
-    @PostMapping("/posts/{id}/like")
+@PostMapping("/posts/{id}/like")
     public ResponseEntity<String> likeBlog(@PathVariable("id") int blogId,
                                            @AuthenticationPrincipal UserDetails userDetails) {
 try
@@ -180,7 +208,6 @@ try
         throw new ResponseStatusException(HttpStatus.CONFLICT,e.getMessage());
 
 }
-
     }
 
     @DeleteMapping("/posts/{id}/unlike")
@@ -216,9 +243,16 @@ try
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
 
-    };
+    }
+
+
+
+
+
 
 }
+
+
 
 
 

@@ -42,7 +42,7 @@ private static final List<String> PUBLIC_URLS = List.of(
         "/api/reset-password",
         "/api/logout",
         "/api/refresh"
-//        "/api/posts/{id}/like"
+
 );
 
     @Override

@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonIgnore; // ✅ Prevents infinite recursion in REST JSON
@@ -18,7 +19,7 @@ import lombok.ToString;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Blog {
+public class Blog implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
@@ -28,6 +29,10 @@ public class Blog {
     private byte[] ImageData;
     private String ImageType;
     private String ImageName;
+    private String useremailid;
+
+    @Version
+    private Integer version;
 
     @JsonIgnore
     @ToString.Exclude
@@ -45,4 +50,11 @@ public class Blog {
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )
     private Set<Users> viewedBy = new HashSet<>();
+
+    @JsonIgnore
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @OneToMany(mappedBy = "blogscomments",cascade = CascadeType.ALL)
+    private Set<Comment> commentsofblog=new HashSet<>();
+
 }

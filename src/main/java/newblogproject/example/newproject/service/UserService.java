@@ -131,6 +131,7 @@ public class UserService {
         return true;
     }
 
+    @Cacheable(value= "users")
     public List<Users> getAllusers() {
         List<Users> users=repo.findAll();
         if(users.isEmpty())
@@ -139,14 +140,14 @@ public class UserService {
         return users;
 }
 
-   @Cacheable(value = "users",key="#email")
-    public ProfileResponse findByemail(String email) {
-
-       Users user=repo.findByEmail(email).orElseThrow(()->new UsernameNotFoundException("email not found"+email));
-       ProfileResponse PR= new ProfileResponse();
-       PR.setEmail(email);
-       PR.setIsAccountVerified(user.getIsAccountVerified());
-       PR.setUsername(user.getUsername());
-       return PR;
-    }
+//   @Cacheable(value = "users",key="#email")
+//    public ProfileResponse findByemail(String email) {
+//
+//       Users user=repo.findByEmail(email).orElseThrow(()->new UsernameNotFoundException("email not found"+email));
+//       ProfileResponse PR= new ProfileResponse();
+//       PR.setEmail(email);
+//       PR.setIsAccountVerified(user.getIsAccountVerified());
+//       PR.setUsername(user.getUsername());
+//       return PR;
+//    }
 }

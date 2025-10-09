@@ -73,4 +73,16 @@ public class Users {
     @EqualsAndHashCode.Exclude
     @OneToMany(mappedBy = "paiduser")
     private Set<PaymentOrder> paidorders=new HashSet<>();
+
+    @JsonIgnore
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @OneToMany(mappedBy = "author",cascade = CascadeType.ALL)
+    private Set<Comment> commentsbyuser=new HashSet<>();
+
+    @JsonIgnore
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @ManyToMany(mappedBy = "likedby")
+    private Set<Comment> likedcomments=new HashSet<>();
 }

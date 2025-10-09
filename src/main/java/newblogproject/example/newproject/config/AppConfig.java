@@ -20,8 +20,9 @@ public class AppConfig {
         return new DataSourceTransactionManager(dataSource);
     }
 
-
-//
-//    @Bean
-//    public TransactionTemplate transactionTemplate
+    @Bean
+    public TransactionTemplate transactionTemplate(PlatformTransactionManager platformTransactionManager)
+    {
+        return new TransactionTemplate(platformTransactionManager);
+    }
 }

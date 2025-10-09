@@ -54,7 +54,7 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .csrf(httpSecurityCsrfConfigurer -> httpSecurityCsrfConfigurer.disable())
                 .authorizeHttpRequests(requests -> requests
-                        .requestMatchers("/api/posts/*/image").permitAll()
+//                        .requestMatchers("/api/posts/*/image").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // <-- Allow preflight
                       .requestMatchers("/api/login","/api/register","/api/refresh")
 //                        .requestMatchers("/api/login", "/api/register")"/api/posts/{id}/like"

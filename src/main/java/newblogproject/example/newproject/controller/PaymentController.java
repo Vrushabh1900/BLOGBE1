@@ -5,9 +5,11 @@ import lombok.extern.slf4j.Slf4j;
 import newblogproject.example.newproject.DTO.CreateOrderRequest;
 import newblogproject.example.newproject.DTO.PaymentOrder;
 import newblogproject.example.newproject.DTO.UpdatePaymentRequest;
+import newblogproject.example.newproject.Events.OrderCreatedEvent;
 import newblogproject.example.newproject.models.Users;
 import newblogproject.example.newproject.service.RazorPayService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,6 +25,9 @@ import java.util.UUID;
 public class PaymentController {
     @Autowired
     private RazorPayService paymentService;
+
+@Autowired
+    ApplicationEventPublisher publisher;
 
     @PostMapping("/create-order")
     public ResponseEntity<PaymentOrder> createOrder(@RequestBody CreateOrderRequest request, @CurrentSecurityContext(expression = "authentication?.name") String email) throws RazorpayException {
@@ -46,8 +51,19 @@ public class PaymentController {
     @PostMapping("/update-payment")
     public ResponseEntity<?> updatePayment(@RequestBody UpdatePaymentRequest request) {
         try
-        {paymentService.updatePaymentDetails(request.getRazorpayOrderId(), request.getPaymentId(), request.getStatus());} catch (
-                Exception e) {
+        {
+
+                OrderCreatedEvent event = new OrderCreatedEvent(
+                        request.getRazorpayOrderId(),
+                        request.getPaymentId(),
+                        request.getStatus()
+                );
+               publisher.publishEvent(event);
+
+//            paymentService.updatePaymentDetails(request.getRazorpayOrderId(), request.getPaymentId(), request.getStatus());
+        }
+        catch(Exception e)
+        {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"payment updation failed");
         }
         return ResponseEntity.ok("Payment updated");

@@ -13,8 +13,10 @@ import org.springframework.transaction.support.TransactionTemplate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DummyTransactionTests {
+
     private TransactionTemplate TT;
     private PlatformTransactionManager ptm;
+
     public void dosm()
     {TransactionCallback<TransactionStatus> TC =(TransactionStatus status)->{
         return status;

@@ -211,19 +211,9 @@ public ResponseEntity<?> loginpage(@RequestBody AuthRequest authRequest)
                 .header(HttpHeaders.SET_COOKIE, jwt.toString(), refreshCookie.toString())
                 .body(Map.of("message", "Tokens refreshed"));
     }
-@GetMapping("/users")
-public ResponseEntity<ProfileResponse> getusers(@CurrentSecurityContext(expression = "authentication?.name")String email)
-{
-    return new ResponseEntity<>(service.findByemail(email),HttpStatus.OK);
-}
 
-//@PostMapping("/viewpost/{id}")
-//    public void viewpost(@PathVariable int blogid,@CurrentSecurityContext(expression = "authentication?.name")String email)
-//{
-//    try{
-//        bs
-//    }
-//}
+
+
 }
 
 

@@ -1,12 +1,16 @@
 package newblogproject.example.newproject.service;
 
 
+import newblogproject.example.newproject.Events.BlogCreatedEvent;
 import newblogproject.example.newproject.models.Blog;
+import newblogproject.example.newproject.models.Comment;
 import newblogproject.example.newproject.models.Users;
 import newblogproject.example.newproject.repo.BlogRepo;
 import newblogproject.example.newproject.repo.UserRepo;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -24,50 +28,65 @@ import java.util.List;
 @Service
 public class BlogService {
     @Autowired
-BlogRepo repo;
+BlogRepo Blogrepo;
     @Autowired
     UserRepo userRepo;
     @Autowired
     TransactionTemplate tt;
+    @Autowired
+    ApplicationEventPublisher publisher;
 
+@Transactional(isolation = Isolation.READ_COMMITTED)
+    public Blog createpost(Blog blogo, MultipartFile imageFile,String email) throws IOException {
 
-    public Blog createpost(Blog blogo, MultipartFile imageFile) throws IOException {
+        publisher.publishEvent(new BlogCreatedEvent(blogo,imageFile));
+
+        blogo.setUseremailid(email);
         blogo.setImageData(imageFile.getBytes());
         blogo.setImageType(imageFile.getContentType());
         blogo.setImageName(imageFile.getOriginalFilename());
-        return repo.save(blogo);
+        return Blogrepo.save(blogo);
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW, isolation=Isolation.SERIALIZABLE)
+    @Transactional( isolation=Isolation.READ_COMMITTED)
+    @Cacheable(value = "allblogs")
     public List<Blog> getposts() {
-        return repo.findAll(Sort.by(Sort.Direction.DESC, "id"));
+        List<Blog> allblogs= Blogrepo.findAll(Sort.by(Sort.Direction.DESC, "id"));
+    return allblogs;
     }
 
-//@Transactional(isolation= Isolation.)
-    public Blog updatepostbyid(int editingId,Blog blogo,MultipartFile imageFile) throws IOException {
-//      Blog blog1=repo.findById(editingId).orElse(null);
-        blogo.setImageData(imageFile.getBytes());
-        blogo.setImageType(imageFile.getContentType());
-        blogo.setImageName(imageFile.getOriginalFilename());
-      return repo.save(blogo);
+
+    public List<Blog> getpostbyuser(String email)
+    {
+        return Blogrepo.findByUseremailid(email).orElseThrow(()->new UsernameNotFoundException("email not found"));
     }
+
+@Transactional(propagation = Propagation.REQUIRES_NEW, isolation=Isolation.REPEATABLE_READ)
+public Blog updatepostbyid(int editingId,Blog blogo,MultipartFile imageFile) throws IOException {
+//      Blog blog1=repo.findById(editingId).orElse(null);
+    blogo.setImageData(imageFile.getBytes());
+    blogo.setImageType(imageFile.getContentType());
+    blogo.setImageName(imageFile.getOriginalFilename());
+    return Blogrepo.save(blogo);
+}
+
 
 
     public void deletepost(int id, Blog blogo) {
-        repo.delete(blogo);
+        Blogrepo.delete(blogo);
     }
 
 
 public List<Blog> searchByKeyword(String keyword) {
-    return repo.searchByKeyword("%" + keyword + "%");
+    return Blogrepo.searchByKeyword("%" + keyword + "%");
 }
 
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public void likePost(String email, int blogId) {
         Users user = userRepo.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-        Blog blog = repo.findById(blogId)
+        Blog blog = Blogrepo.findById(blogId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Blog not found"));
 
         Hibernate.initialize(user.getLikedBlogs()); // ensure loaded
@@ -78,7 +97,7 @@ public List<Blog> searchByKeyword(String keyword) {
         if (alreadyLiked) {
             System.out.println("already liked 409");
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Blog already liked");
-//            throw new RuntimeException("sabki maaaa kaaaa");
+
         }
 
         user.getLikedBlogs().add(blog);
@@ -91,7 +110,7 @@ public List<Blog> searchByKeyword(String keyword) {
       tt.execute(status->  { Users user = userRepo.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-        Blog blog = repo.findById(blogId)
+        Blog blog = Blogrepo.findById(blogId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Blog not found"));
 
         Hibernate.initialize(user.getLikedBlogs());
@@ -110,25 +129,24 @@ public List<Blog> searchByKeyword(String keyword) {
 
 
     public int countLikes(int postId) {
-        System.out.println("-------------------------------------------inside getlikes-------------------------------------------");
         return userRepo.countByLikedBlogs_Id(postId);
     }
 
 
     public long viewedbycount(int postId, String email) {
-        Blog post = repo.findById(postId)
+        Blog post = Blogrepo.findById(postId)
                 .orElseThrow(() -> new UsernameNotFoundException("Post not found"));
         return post.getViewedBy().size();
     }
 
 
-    @Transactional
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     public void adduser(int blogId,String email) {
 
         Users user = userRepo.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User with email " + email + " not found"));
 
-        Blog blog = repo.findById(blogId)
+        Blog blog = Blogrepo.findById(blogId)
                 .orElseThrow(() -> new UsernameNotFoundException("Blog post not found with id " + blogId));
         //Hibernate.initialize(user.getLikedBlogs());
 //        if (!blog.getViewedBy().contains(user)) {
@@ -140,9 +158,12 @@ public List<Blog> searchByKeyword(String keyword) {
         if(!alreadyviewed)
         {
             blog.getViewedBy().add(user);
+
         }
         else {
             throw new RuntimeException("user already viewed this blog");
         }
     }
+
+
 }

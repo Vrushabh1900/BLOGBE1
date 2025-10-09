@@ -10,9 +10,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface BlogRepo extends JpaRepository<Blog,Integer> {
+
+
 //    @Query("SELECT p from Blog p WHERE "+
 //            "LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
 //            "LOWER(p.content) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
@@ -23,7 +26,7 @@ public interface BlogRepo extends JpaRepository<Blog,Integer> {
             "LOWER(p.content) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(p.author) LIKE LOWER(CONCAT('%', :keyword, '%')) ")
 List<Blog> searchByKeyword(@RequestParam("keyword") String keyword);
-
+//    Optional<Blog>
     Page<Blog> findAll(Pageable pageable);
 
     @Query("SELECT p from Blog p WHERE "+
@@ -32,5 +35,7 @@ List<Blog> searchByKeyword(@RequestParam("keyword") String keyword);
             "LOWER(p.author) LIKE LOWER(CONCAT('%', :keyword, '%')) ")
     Slice<Blog> findByKeyword(String keyword, Pageable pageable);
 
+
+    Optional<List<Blog>> findByUseremailid(String email);
 
 }
